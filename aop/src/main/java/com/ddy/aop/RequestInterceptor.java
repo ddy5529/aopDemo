@@ -1,5 +1,8 @@
 package com.ddy.aop;
 
+import com.ddy.aop.utils.DataUtils;
+import com.ddy.aop.utils.FileUtils;
+import com.ddy.aop.utils.LogUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -9,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +28,6 @@ public class RequestInterceptor {
     /* 拦截管理员访问的请求,(定义切点，该方法无方法体,主要为方便同类中其他方法使用此处配置的切入点)*/
     @Pointcut("@annotation(com.ddy.aop.LogRecord)")
     public void recordLog() {
-        LogUtils.printDebugLog(logger, "日志记录");
     }
 
     /*定义前置advice,同时接受JoinPoint切入点对象,可以没有该参数
@@ -39,13 +42,18 @@ public class RequestInterceptor {
         point.getSourceLocation().getWithinType().getName();//获取切点对应的类名
         point.getSourceLocation().getWithinType().getCanonicalName();
         Annotation[] annotations = point.getSourceLocation().getWithinType().getAnnotations();//获取切点的所有的注解
-        point.getSourceLocation().getLine();
+
         LogUtils.printDebugLog(logger, "日志记录Before");
     }
 
     @After("recordLog()")
     public void recordLogAfter(JoinPoint point) {
         LogUtils.printDebugLog(logger, "日志记录After");
+        try {
+            FileUtils.appendWtiteRootFile("log/LogRecord/web","after.data","1 "+ DataUtils.getNowDate());
+        } catch (IOException e) {
+            LogUtils.printErrorLog(logger,"文件写入异常");
+        }
     }
 
 }
